@@ -263,20 +263,16 @@ private:
     }
   };
 
-  Entry *m_entry;
-
 private:
-  explicit Bitset(Entry *e) //
-      : m_entry{e} {
-  }
+  Entry m_entry;
 
 public:
   explicit Bitset(const std::bitset<T_Size> &init) //
-      : Bitset{new Entry(init)} {
+      : m_entry{init} {
   }
 
   Bitset() //
-      : Bitset{new Entry} {
+      : m_entry{} {
   }
 
   /**
@@ -284,20 +280,16 @@ public:
   *  @param  b  the value to fill with
   */
   explicit Bitset(bool v) //
-      : Bitset(new Entry(v)) {
+      : m_entry(v) {
   }
 
   Bitset(const Bitset &) = delete;
+  Bitset(Bitset &&) = delete;
 
-  Bitset(Bitset &&o) : Bitset{nullptr} {
-    std::swap(m_entry, o.m_entry);
-  }
+  Bitset &operator=(const Bitset &) = delete;
+  Bitset &operator=(Bitset &&) = delete;
 
   ~Bitset() {
-    if (m_entry) {
-      delete m_entry;
-      m_entry = nullptr;
-    }
   }
 
   constexpr size_t size() const {
@@ -311,11 +303,11 @@ public:
   *  @throw  std::out_of_range  If @a pos is bigger the size of the %set.
   */
   bool set(size_t bitIdx, bool b) {
-    return m_entry->set(bitIdx, b);
+    return m_entry.set(bitIdx, b);
   }
 
   bool test(size_t bitIdx) const {
-    bool ret = m_entry->test(bitIdx);
+    bool ret = m_entry.test(bitIdx);
     return ret;
   }
 
@@ -328,7 +320,7 @@ public:
    * against $test if all satisfies return true or else false
    */
   bool all(size_t bitIdx, bool test) const {
-    return m_entry->all(bitIdx, test ? ~Byte_t(0) : Byte_t(0));
+    return m_entry.all(bitIdx, test ? ~Byte_t(0) : Byte_t(0));
   }
 
   bool all(bool test) const {
@@ -336,7 +328,7 @@ public:
   }
 
   size_t find_first(size_t bitIdx, bool find) const {
-    return m_entry->find_first(bitIdx, find);
+    return m_entry.find_first(bitIdx, find);
   }
 
   size_t find_first(bool find) const {
@@ -344,7 +336,7 @@ public:
   }
 
   size_t swap_first(size_t idx, bool set) {
-    return m_entry->swap_first(idx, set);
+    return m_entry.swap_first(idx, set);
   }
 
   size_t swap_first(bool set) {
