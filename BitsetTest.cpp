@@ -6,7 +6,7 @@
 
 using std::cout;
 using std::endl;
-using sp::con::Bitset;
+using sp::Bitset;
 
 class BitsetTest : public ::testing::TestWithParam<bool> {};
 
