@@ -224,7 +224,7 @@ private:
     }
 
     size_t swap_first(size_t bitIdx, bool set, size_t limitIdx) {
-      size_t byteIdx = byte_index(bitIdx);
+      size_t wordIdx = byte_index(bitIdx);
       Byte_t wordBitStart = word_index(bitIdx);
       /**
        * we only need to look in words which is not:
@@ -234,12 +234,12 @@ private:
       const Byte_t mask = set ? ~Byte_t(0) : Byte_t(0);
 
       const size_t limitWord = byte_index(limitIdx);
-      while (byteIdx <= limitWord) {
-        auto &current = word_for(byteIdx);
+      while (wordIdx <= limitWord) {
+        auto &current = word_for(wordIdx);
         Byte_t word = current.load(std::memory_order_acquire);
 
         if (mask != word) {
-          size_t bitMax = byteIdx == limitWord ? word_index(limitIdx) : bits;
+          size_t bitMax = wordIdx == limitWord ? word_index(limitIdx) : bits;
           for (size_t bit = wordBitStart; bit < bitMax; ++bit) {
             /**
              * Mask for current bit: 0001000
@@ -251,13 +251,13 @@ private:
               Byte_t value = set ? Byte_t(word | vmask)
                                  : Byte_t(word & Byte_t(vmask ^ ~Byte_t(0)));
               if (current.compare_exchange_strong(word, value)) {
-                return bit_index(byteIdx, bit);
+                return bit_index(wordIdx, bit);
               }
             }
           } // for
         }
         wordBitStart = Byte_t(0);
-        ++byteIdx;
+        ++wordIdx;
       } // while
       return T_Size;
     }
@@ -345,6 +345,10 @@ public:
 
   size_t swap_first(bool set) {
     return swap_first(size_t(0), set);
+  }
+
+  size_t swap_first(bool set, size_t limit) {
+    return swap_first(size_t(0), set, limit);
   }
 
   std::string to_string() {

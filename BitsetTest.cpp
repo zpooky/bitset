@@ -364,27 +364,65 @@ void test_swap_first_random(bool v) {
   std::bitset<bits> init(str);
   Bitset<bits, T> bb{init};
   size_t pos(0);
-  cout << endl << bb.to_string() << endl;
-  while (pos != bb.size()) {
+  // cout << endl << bb.to_string() << endl;
+  while (true) {
+    // auto posb = pos;
     pos = find_next_(pos, !v, bb);
-    ASSERT_EQ(pos, bb.swap_first(pos, v));
+    if (pos < bb.size()) {
+      // printf("pos[%zu] = find_next_(pos[%zu], !v[%d], bb)\n", pos, posb, !v);
+
+      size_t res = bb.swap_first(pos, v);
+      ASSERT_EQ(pos, res);
+    } else {
+      break;
+    }
   }
 }
 
-TEST_P(BitsetTest, test_swap_first_randomlong) {
+TEST_P(BitsetTest, test_swap_first_random_long) {
   test_swap_first_random<uint64_t>(GetParam());
 }
 
-TEST_P(BitsetTest, test_swap_first_randomint) {
+TEST_P(BitsetTest, test_swap_first_random_int) {
   test_swap_first_random<uint32_t>(GetParam());
 }
 
-TEST_P(BitsetTest, test_swap_first_randomshort) {
+TEST_P(BitsetTest, test_swap_first_random_short) {
   test_swap_first_random<uint16_t>(GetParam());
 }
 
-TEST_P(BitsetTest, test_swap_first_randombyte) {
+TEST_P(BitsetTest, test_swap_first_random_byte) {
   test_swap_first_random<uint8_t>(GetParam());
+}
+
+template <typename T>
+void test_swap_limit_length(bool v) {
+  constexpr size_t bits(1024);
+  Bitset<bits, T> bb{v};
+  ASSERT_EQ(bb.swap_first(v, 0), bb.npos);
+
+  for (size_t i = 0; i < bits; ++i) {
+    ASSERT_EQ(bb.swap_first(!v, i + 1), i);
+    ASSERT_EQ(bb.swap_first(!v, i + 1), bb.npos); // TODO
+  }
+}
+//TODO add swap_first(limit,x:true,limit) == x
+//TODO add swap_first(limit,x:false,limit) == npos
+
+TEST_P(BitsetTest, test_swap_limit_long) {
+  test_swap_limit_length<uint64_t>(GetParam());
+}
+
+TEST_P(BitsetTest, test_swap_limit_int) {
+  test_swap_limit_length<uint32_t>(GetParam());
+}
+
+TEST_P(BitsetTest, test_swap_limit_short) {
+  test_swap_limit_length<uint16_t>(GetParam());
+}
+
+TEST_P(BitsetTest, test_swap_limit_byte) {
+  test_swap_limit_length<uint8_t>(GetParam());
 }
 
 std::string reverse(const std::string &s) {

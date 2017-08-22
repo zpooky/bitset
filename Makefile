@@ -2,7 +2,7 @@
 #http://www.puxan.com/web/howto-write-generic-makefiles/
 # Declaration of variables
 CC = g++
-CC_FLAGS = -enable-frame-pointers -std=c++17 `pkg-config --cflags gtest`
+CC_FLAGS = -enable-frame-pointers -std=c++17 `pkg-config --cflags gtest` -ggdb
 LIBS = -lpthread `pkg-config --libs gtest`
 
 # File names
@@ -26,3 +26,6 @@ print:
 	echo "$(CC) $(OBJECTS) -o $(EXEC) $(LIBS)"
 	echo "$(LIBS)"
 	echo $(CC_FLAGS)
+
+test: $(EXEC)
+	./main
