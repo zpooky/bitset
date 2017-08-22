@@ -18,8 +18,7 @@ public:
 private:
   using Entry_t = std::atomic<Byte_t>;
   static constexpr size_t bits = sizeof(Byte_t) * 8;
-  static constexpr size_t T_Size_based_on_bits =
-      size_t(std::ceil(double(T_Size) / bits));
+  static constexpr size_t T_Words = size_t(std::ceil(double(T_Size) / bits));
   static constexpr Byte_t one_ = Byte_t(1) << size_t(bits - 1); // 10000...
   //
   static_assert(std::is_scalar<Byte_t>::value,
@@ -36,7 +35,7 @@ private:
   struct Entry {
   private:
   public:
-    std::array<Entry_t, T_Size_based_on_bits> m_data;
+    std::array<Entry_t, T_Words> m_data;
 
     Entry() //
         : m_data() {
@@ -58,7 +57,7 @@ private:
     }
 
     Entry_t &word_for(size_t byteIdx) {
-      constexpr auto max = T_Size_based_on_bits;
+      constexpr auto max = T_Words;
       if (byteIdx >= max) {
         throw std::out_of_range(std::string(""));
       }
@@ -66,7 +65,7 @@ private:
     }
 
     const Entry_t &word_for(size_t byteIdx) const {
-      constexpr auto max = T_Size_based_on_bits;
+      constexpr auto max = T_Words;
       if (byteIdx >= max) {
         throw std::out_of_range(std::string(""));
       }
@@ -81,7 +80,7 @@ private:
     using ttttt = unsigned long long;
 
     void init_with(Byte_t def) {
-      for (size_t idx(0); idx < T_Size_based_on_bits; ++idx) {
+      for (size_t idx(0); idx < T_Words; ++idx) {
         auto &word = word_for(idx);
         word.store(def);
       }
@@ -178,7 +177,7 @@ private:
 
       Byte_t mask = test & mask_right(wordIdx);
 
-      for (; idx < T_Size_based_on_bits; ++idx) {
+      for (; idx < T_Words; ++idx) {
         auto &word = word_for(idx);
         Byte_t current = word.load();
 
@@ -204,7 +203,7 @@ private:
 
       const Byte_t mask = find ? Byte_t(0) : ~Byte_t(0);
 
-      for (; byteIdx < T_Size_based_on_bits; ++byteIdx) {
+      for (; byteIdx < T_Words; ++byteIdx) {
         auto &wrd = word_for(byteIdx);
         const Byte_t &word = wrd.load();
 
@@ -224,9 +223,9 @@ private:
       return npos;
     }
 
-    size_t swap_first(size_t bitIdx, bool set) {
+    size_t swap_first(size_t bitIdx, bool set, size_t limitIdx) {
       size_t byteIdx = byte_index(bitIdx);
-      auto wordIdx = word_index(bitIdx);
+      Byte_t wordBitStart = word_index(bitIdx);
       /**
        * we only need to look in words which is not:
        * all 1 if 'set' is true
@@ -234,12 +233,14 @@ private:
        */
       const Byte_t mask = set ? ~Byte_t(0) : Byte_t(0);
 
-      while (byteIdx < T_Size_based_on_bits) {
+      const size_t limitWord = byte_index(limitIdx);
+      while (byteIdx <= limitWord) {
         auto &current = word_for(byteIdx);
-        Byte_t word = current.load();
+        Byte_t word = current.load(std::memory_order_acquire);
 
         if (mask != word) {
-          for (size_t bit = wordIdx; bit < bits; ++bit) {
+          size_t bitMax = byteIdx == limitWord ? word_index(limitIdx) : bits;
+          for (size_t bit = wordBitStart; bit < bitMax; ++bit) {
             /**
              * Mask for current bit: 0001000
              */
@@ -253,11 +254,11 @@ private:
                 return bit_index(byteIdx, bit);
               }
             }
-          }
+          } // for
         }
-        wordIdx = Byte_t(0);
+        wordBitStart = Byte_t(0);
         ++byteIdx;
-      }
+      } // while
       return T_Size;
     }
   };
@@ -334,8 +335,12 @@ public:
     return find_first(size_t(0), find);
   }
 
+  size_t swap_first(size_t idx, bool set, size_t limit) {
+    return m_entry.swap_first(idx, set, limit);
+  }
+
   size_t swap_first(size_t idx, bool set) {
-    return m_entry.swap_first(idx, set);
+    return swap_first(idx, set, T_Size);
   }
 
   size_t swap_first(bool set) {

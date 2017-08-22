@@ -3,7 +3,7 @@
 # Declaration of variables
 CC = g++
 CC_FLAGS = -enable-frame-pointers -std=c++17 $(pkg-config --cflags gtest)
-LIBS = -lpthread $(pkg-config --lib gtest)
+LIBS = -lpthread $(pkg-config --libs gtest)
 
 # File names
 EXEC = main
@@ -16,7 +16,7 @@ $(EXEC): $(OBJECTS)
 
 # To obtain object files
 %.o: %.cpp
-	$(cc) -c $(cc_flags) $< -o $@
+	$(CC) -c $(CC_FLAGS) $< -o $@
 
 # To remove generated files
 clean:
@@ -24,3 +24,5 @@ clean:
 
 print:
 	echo "$(CC) $(OBJECTS) -o $(EXEC) $(LIBS)"
+	echo "$(LIBS)"
+	echo $(CC_FLAGS)
