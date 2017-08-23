@@ -37,56 +37,48 @@ private:
   public:
     std::array<Entry_t, T_Words> m_data;
 
-    Entry() //
+    Entry() noexcept //
         : m_data() {
     }
 
-    explicit Entry(const std::bitset<T_Size> &init) //
+    explicit Entry(const std::bitset<T_Size> &init) noexcept //
         : Entry() {
       transfer(init);
     }
 
-    explicit Entry(bool v) //
+    explicit Entry(bool v) noexcept //
         : Entry() {
       init_with(v ? ~Byte_t(0) : Byte_t(0));
     }
 
   private:
-    constexpr size_t byte_index(size_t idx) const {
+    constexpr size_t byte_index(size_t idx) const noexcept {
       return size_t(double(idx) / bits);
     }
 
-    Entry_t &word_for(size_t byteIdx) {
-      constexpr auto max = T_Words;
-      if (byteIdx >= max) {
-        throw std::out_of_range(std::string(""));
-      }
+    Entry_t &word_for(size_t byteIdx) noexcept {
       return m_data[byteIdx];
     }
 
-    const Entry_t &word_for(size_t byteIdx) const {
-      constexpr auto max = T_Words;
-      if (byteIdx >= max) {
-        throw std::out_of_range(std::string(""));
-      }
+    const Entry_t &word_for(size_t byteIdx) const noexcept {
       return m_data[byteIdx];
     }
 
-    void store(size_t wordIdx, Byte_t value) {
+    void store(size_t wordIdx, Byte_t value) noexcept {
       auto &entry = word_for(wordIdx);
       entry.store(value);
     }
 
     using ttttt = unsigned long long;
 
-    void init_with(Byte_t def) {
+    void init_with(Byte_t def) noexcept {
       for (size_t idx(0); idx < T_Words; ++idx) {
         auto &word = word_for(idx);
         word.store(def);
       }
     }
 
-    void transfer(const std::bitset<T_Size> &init) {
+    void transfer(const std::bitset<T_Size> &init) noexcept {
       Byte_t word(0);
       size_t entryIdx(0);
       size_t i(0);
@@ -113,7 +105,7 @@ private:
      * returns true if the specified bit has to be altered
      * returns false if no change was required
      */
-    bool set(size_t bitIdx, bool b) {
+    bool set(size_t bitIdx, bool b) noexcept {
       size_t byteIdx = byte_index(bitIdx);
       Entry_t &e = word_for(byteIdx);
 
@@ -144,11 +136,11 @@ private:
       return true;
     }
 
-    constexpr Byte_t word_index(size_t bitIdx) const {
+    constexpr Byte_t word_index(size_t bitIdx) const noexcept {
       return bitIdx - ttttt(ttttt(bitIdx / bits) * bits);
     }
 
-    bool test(size_t bitIdx) const {
+    bool test(size_t bitIdx) const noexcept {
       size_t byteIdx = byte_index(bitIdx);
       const Entry_t &e = word_for(byteIdx);
 
@@ -159,7 +151,7 @@ private:
       return Byte_t(word & mask) != Byte_t(0);
     }
 
-    Byte_t mask_right(Byte_t idx) const {
+    Byte_t mask_right(Byte_t idx) const noexcept {
       const Byte_t b = ~Byte_t(0);
       const Byte_t res = b >> idx;
       return res;
@@ -171,7 +163,7 @@ private:
      * 10000000_00000000|32768
      * 00000000_00000001|1
      */
-    bool all(size_t bitIdx, Byte_t test) const {
+    bool all(size_t bitIdx, Byte_t test) const noexcept {
       size_t idx = byte_index(bitIdx);
       Byte_t wordIdx = word_index(bitIdx);
 
@@ -192,11 +184,11 @@ private:
       return true;
     }
 
-    size_t bit_index(size_t byteIdx, Byte_t wordIdx) const {
+    size_t bit_index(size_t byteIdx, Byte_t wordIdx) const noexcept {
       return size_t(byteIdx * bits) + wordIdx;
     }
 
-    size_t find_first(size_t bitIdx, bool find) const {
+    size_t find_first(size_t bitIdx, bool find) const noexcept {
       // TODO
       size_t byteIdx = byte_index(bitIdx);
       auto wordIdx = word_index(bitIdx);
@@ -223,7 +215,7 @@ private:
       return npos;
     }
 
-    size_t swap_first(size_t bitIdx, bool set, size_t limitIdx) {
+    size_t swap_first(size_t bitIdx, bool set, size_t limitIdx) noexcept {
       size_t wordIdx = byte_index(bitIdx);
       Byte_t wordBitStart = word_index(bitIdx);
       /**
@@ -267,11 +259,11 @@ private:
   Entry m_entry;
 
 public:
-  explicit Bitset(const std::bitset<T_Size> &init) //
+  explicit Bitset(const std::bitset<T_Size> &init) noexcept //
       : m_entry{init} {
   }
 
-  Bitset() //
+  Bitset() noexcept //
       : m_entry{} {
   }
 
@@ -279,7 +271,7 @@ public:
   *  @brief init the bitset with
   *  @param  b  the value to fill with
   */
-  explicit Bitset(bool v) //
+  explicit Bitset(bool v) noexcept //
       : m_entry(v) {
   }
 
@@ -289,10 +281,10 @@ public:
   Bitset &operator=(const Bitset &) = delete;
   Bitset &operator=(Bitset &&) = delete;
 
-  ~Bitset() {
+  ~Bitset() noexcept {
   }
 
-  constexpr size_t size() const {
+  constexpr size_t size() const noexcept {
     return T_Size;
   }
 
@@ -302,16 +294,22 @@ public:
   *  @return wether b is set to b allready true, otherwise false
   *  @throw  std::out_of_range  If @a pos is bigger the size of the %set.
   */
-  bool set(size_t bitIdx, bool b) {
+  bool set(size_t bitIdx, bool b) noexcept {
+    if (bitIdx >= T_Size) {
+      // TODO
+    }
     return m_entry.set(bitIdx, b);
   }
 
-  bool test(size_t bitIdx) const {
+  bool test(size_t bitIdx) const noexcept {
+    if (bitIdx >= T_Size) {
+      return false;
+    }
     bool ret = m_entry.test(bitIdx);
     return ret;
   }
 
-  bool operator[](size_t bitIdx) const {
+  bool operator[](size_t bitIdx) const noexcept {
     return test(bitIdx);
   }
 
@@ -319,35 +317,44 @@ public:
    * for all starting with $bitIndex will be tested
    * against $test if all satisfies return true or else false
    */
-  bool all(size_t bitIdx, bool test) const {
+  bool all(size_t bitIdx, bool test) const noexcept {
+    if (bitIdx >= T_Size) {
+      return false;
+    }
     return m_entry.all(bitIdx, test ? ~Byte_t(0) : Byte_t(0));
   }
 
-  bool all(bool test) const {
+  bool all(bool test) const noexcept {
     return all(size_t(0), test);
   }
 
-  size_t find_first(size_t bitIdx, bool find) const {
+  size_t find_first(size_t bitIdx, bool find) const noexcept {
+    if (bitIdx >= T_Size) {
+      return false;
+    }
     return m_entry.find_first(bitIdx, find);
   }
 
-  size_t find_first(bool find) const {
+  size_t find_first(bool find) const noexcept {
     return find_first(size_t(0), find);
   }
 
-  size_t swap_first(size_t idx, bool set, size_t limit) {
+  size_t swap_first(size_t idx, bool set, size_t limit) noexcept {
+    if (idx >= T_Size) {
+      return npos;
+    }
     return m_entry.swap_first(idx, set, limit);
   }
 
-  size_t swap_first(size_t idx, bool set) {
+  size_t swap_first(size_t idx, bool set) noexcept {
     return swap_first(idx, set, T_Size);
   }
 
-  size_t swap_first(bool set) {
+  size_t swap_first(bool set) noexcept {
     return swap_first(size_t(0), set);
   }
 
-  size_t swap_first(bool set, size_t limit) {
+  size_t swap_first(bool set, size_t limit) noexcept {
     return swap_first(size_t(0), set, limit);
   }
 

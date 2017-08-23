@@ -403,12 +403,9 @@ void test_swap_limit_length(bool v) {
 
   for (size_t i = 0; i < bits; ++i) {
     ASSERT_EQ(bb.swap_first(!v, i + 1), i);
-    ASSERT_EQ(bb.swap_first(!v, i + 1), bb.npos); // TODO
+    ASSERT_EQ(bb.swap_first(!v, i + 1), bb.npos);
   }
 }
-//TODO add swap_first(limit,x:true,limit) == x
-//TODO add swap_first(limit,x:false,limit) == npos
-
 TEST_P(BitsetTest, test_swap_limit_long) {
   test_swap_limit_length<uint64_t>(GetParam());
 }
@@ -423,6 +420,34 @@ TEST_P(BitsetTest, test_swap_limit_short) {
 
 TEST_P(BitsetTest, test_swap_limit_byte) {
   test_swap_limit_length<uint8_t>(GetParam());
+}
+
+template <typename T>
+void test_swap_window(bool v) {
+  constexpr size_t bits(1024);
+  Bitset<bits, T> bb{v};
+  ASSERT_EQ(bb.swap_first(v, 0), bb.npos);
+
+  for (size_t i = 0; i < bits; ++i) {
+    ASSERT_EQ(bb.swap_first(i, !v, i + 1), i);
+    ASSERT_EQ(bb.swap_first(i, !v, i + 1), bb.npos);
+  }
+}
+
+TEST_P(BitsetTest, test_swap_window_long) {
+  test_swap_window<uint64_t>(GetParam());
+}
+
+TEST_P(BitsetTest, test_swap_window_int) {
+  test_swap_window<uint32_t>(GetParam());
+}
+
+TEST_P(BitsetTest, test_swap_window_short) {
+  test_swap_window<uint16_t>(GetParam());
+}
+
+TEST_P(BitsetTest, test_swap_window_byte) {
+  test_swap_window<uint8_t>(GetParam());
 }
 
 std::string reverse(const std::string &s) {
