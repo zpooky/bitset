@@ -53,7 +53,7 @@ private:
 
   private:
     constexpr size_t byte_index(size_t idx) const noexcept {
-      return size_t(double(idx) / bits);
+      return size_t(idx / bits);
     }
 
     Entry_t &word_for(size_t byteIdx) noexcept {
