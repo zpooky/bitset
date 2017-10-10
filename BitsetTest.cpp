@@ -2,11 +2,12 @@
 #include "gtest/gtest.h"
 #include <iostream>
 #include <random>
+#include <thread>
 #include <unordered_set>
 
+using sp::Bitset;
 using std::cout;
 using std::endl;
-using sp::Bitset;
 
 class BitsetTest : public ::testing::TestWithParam<bool> {};
 
@@ -21,12 +22,14 @@ TEST_F(BitsetTest, test_empty) {
 }
 
 template <size_t bits, typename T>
-void true_set(Bitset<bits, T> &b) {
+void
+true_set(Bitset<bits, T> &b) {
   for (size_t i = 0; i < bits; ++i) {
     for (size_t a = 0; a < i; ++a) {
       ASSERT_TRUE(b.test(a));
     }
     ASSERT_TRUE(b.set(i, true));
+    ASSERT_FALSE(b.set(i, true));
     for (size_t a = bits - 1; a > i; --a) {
       ASSERT_FALSE(b.test(a));
     }
@@ -34,12 +37,14 @@ void true_set(Bitset<bits, T> &b) {
 }
 
 template <size_t bits, typename T>
-void false_set(Bitset<bits, T> &b) {
+void
+false_set(Bitset<bits, T> &b) {
   for (size_t i = 0; i < bits; ++i) {
     for (size_t a = 0; a < i; ++a) {
       ASSERT_FALSE(b.test(a));
     }
     ASSERT_TRUE(b.set(i, false));
+    ASSERT_FALSE(b.set(i, false));
     for (size_t a = bits - 1; a > i; --a) {
       ASSERT_TRUE(b.test(a));
     }
@@ -47,7 +52,8 @@ void false_set(Bitset<bits, T> &b) {
 }
 
 template <typename T>
-void test_seq_setFalse_get() {
+void
+test_seq_setFalse_get() {
   constexpr size_t bits = 1024;
   Bitset<bits, T> b;
   true_set(b);
@@ -70,7 +76,18 @@ TEST_F(BitsetTest, test_seq_setFalse_get_long) {
   test_seq_setFalse_get<uint64_t>();
 }
 
-std::string random_binary(size_t cnt) {
+TEST_P(BitsetTest, test_set) {
+  printf("test_set(%s)\n", GetParam() ? "true" : "false");
+  Bitset<1024, uint8_t> b{GetParam()};
+  std::size_t i = 0;
+  ASSERT_EQ(GetParam(), b.test(i));
+  bool val = !GetParam();
+  ASSERT_TRUE(b.set(i, val));
+  ASSERT_FALSE(b.set(i, val));
+}
+
+std::string
+random_binary(size_t cnt) {
   std::mt19937 mt(0);
   std::uniform_int_distribution<int> dist(0, 1);
   std::string stream = "";
@@ -89,7 +106,9 @@ public:
   const std::clock_t start;
   const std::string m_msg;
 
-  explicit Timer(const std::string &msg) : start{std::clock()}, m_msg{msg} {
+  explicit Timer(const std::string &msg)
+      : start{std::clock()}
+      , m_msg{msg} {
   }
 
   ~Timer() {
@@ -99,13 +118,15 @@ public:
 };
 
 template <typename F>
-auto time(const std::string &msg, F f) -> decltype(f()) {
+auto
+time(const std::string &msg, F f) -> decltype(f()) {
   Timer t(msg);
   return f();
 }
 
 template <typename T>
-void test_init() {
+void
+test_init() {
   constexpr size_t bits(1024 * 80);
   std::string str = random_binary(bits);
   std::bitset<bits> init(str);
@@ -154,7 +175,8 @@ TEST_F(BitsetTest, init_set_fill) {
 }
 
 template <typename T>
-void test_set_random(bool v) {
+void
+test_set_random(bool v) {
   constexpr size_t bits(1024);
   Bitset<bits, T> bb(!v);
   std::array<size_t, bits> in;
@@ -202,13 +224,15 @@ TEST_P(BitsetTest, test_byte_random) {
 }
 
 template <typename T>
-void test_find(bool v) {
+void
+test_find(bool v) {
   constexpr size_t bits(1024);
   Bitset<bits, T> bb{!v};
   for (size_t i = 0; i < bits; ++i) {
     //        cout << "(" << v << ")" << i << endl;
     ASSERT_EQ(bits, bb.find_first(i, v));
     ASSERT_TRUE(bb.set(i, v));
+    ASSERT_FALSE(bb.set(i, v));
     ASSERT_EQ(v, bb.test(i));
     ASSERT_EQ(i, bb.find_first(i, v));
   }
@@ -231,7 +255,8 @@ TEST_P(BitsetTest, test_findbyte) {
 }
 
 template <typename T>
-void test_find_reverse(bool v) {
+void
+test_find_reverse(bool v) {
   constexpr size_t bits(1024);
   Bitset<bits, T> bb{!v};
   for (size_t i = bb.size(); i-- > 0;) {
@@ -258,7 +283,8 @@ TEST_P(BitsetTest, test_findbyte_reverse) {
 }
 
 template <typename T>
-void test_all_reverse(bool v) {
+void
+test_all_reverse(bool v) {
   constexpr size_t bits(1024);
   Bitset<bits, T> bb{!v};
   cout << endl;
@@ -289,7 +315,8 @@ TEST_P(BitsetTest, test_all_reversebyte_reverse) {
 }
 
 template <typename T>
-void test_all_prefill(bool v) {
+void
+test_all_prefill(bool v) {
   constexpr size_t bits(1024);
   Bitset<bits, T> bb{!v};
   cout << endl;
@@ -317,7 +344,8 @@ TEST_P(BitsetTest, test_all_prefillbyte) {
 }
 
 template <typename T>
-void test_swap_first(bool v) {
+void
+test_swap_first(bool v) {
   constexpr size_t bits(1024);
   Bitset<bits, T> bb{!v};
   for (size_t i = 0; i < bb.size(); ++i) {
@@ -348,7 +376,8 @@ TEST_P(BitsetTest, test_swap_firstbyte_reverse) {
 }
 
 template <typename T, size_t S>
-size_t find_next_(size_t off, bool v, const Bitset<S, T> &bb) {
+size_t
+find_next_(size_t off, bool v, const Bitset<S, T> &bb) {
   for (size_t i = off; i < bb.size(); ++i) {
     if (bb.test(i) == v) {
       return i;
@@ -358,7 +387,8 @@ size_t find_next_(size_t off, bool v, const Bitset<S, T> &bb) {
 }
 
 template <typename T>
-void test_swap_first_random(bool v) {
+void
+test_swap_first_random(bool v) {
   constexpr size_t bits(1024);
   std::string str = random_binary(bits);
   std::bitset<bits> init(str);
@@ -396,7 +426,8 @@ TEST_P(BitsetTest, test_swap_first_random_byte) {
 }
 
 template <typename T>
-void test_swap_limit_length(bool v) {
+void
+test_swap_limit_length(bool v) {
   constexpr size_t bits(1024);
   Bitset<bits, T> bb{v};
   ASSERT_EQ(bb.swap_first(v, 0), bb.npos);
@@ -423,7 +454,8 @@ TEST_P(BitsetTest, test_swap_limit_byte) {
 }
 
 template <typename T>
-void test_swap_window(bool v) {
+void
+test_swap_window(bool v) {
   constexpr size_t bits(1024);
   Bitset<bits, T> bb{v};
   ASSERT_EQ(bb.swap_first(v, 0), bb.npos);
@@ -450,7 +482,8 @@ TEST_P(BitsetTest, test_swap_window_byte) {
   test_swap_window<uint8_t>(GetParam());
 }
 
-std::string reverse(const std::string &s) {
+std::string
+reverse(const std::string &s) {
   std::string res;
   res.reserve(s.size());
   for (size_t i = s.size(); i-- > 0;) {
@@ -460,7 +493,8 @@ std::string reverse(const std::string &s) {
 }
 
 template <typename T>
-void test_to_string() {
+void
+test_to_string() {
   constexpr size_t bits(1024);
   std::string str = random_binary(bits);
   std::bitset<bits> init(str);
@@ -482,4 +516,9 @@ TEST_F(BitsetTest, test_to_stringshort) {
 
 TEST_F(BitsetTest, test_to_stringbyte) {
   test_to_string<uint8_t>();
+}
+
+template <typename T, size_t bits>
+void
+test_threaded_find_fist() {
 }

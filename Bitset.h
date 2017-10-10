@@ -52,33 +52,39 @@ private:
     }
 
   private:
-    constexpr size_t byte_index(size_t idx) const noexcept {
+    constexpr size_t
+    byte_index(size_t idx) const noexcept {
       return size_t(idx / bits);
     }
 
-    Entry_t &word_for(size_t byteIdx) noexcept {
+    Entry_t &
+    word_for(size_t byteIdx) noexcept {
       return m_data[byteIdx];
     }
 
-    const Entry_t &word_for(size_t byteIdx) const noexcept {
+    const Entry_t &
+    word_for(size_t byteIdx) const noexcept {
       return m_data[byteIdx];
     }
 
-    void store(size_t wordIdx, Byte_t value) noexcept {
+    void
+    store(size_t wordIdx, Byte_t value) noexcept {
       auto &entry = word_for(wordIdx);
       entry.store(value);
     }
 
     using ttttt = unsigned long long;
 
-    void init_with(Byte_t def) noexcept {
+    void
+    init_with(Byte_t def) noexcept {
       for (size_t idx(0); idx < T_Words; ++idx) {
         auto &word = word_for(idx);
         word.store(def);
       }
     }
 
-    void transfer(const std::bitset<T_Size> &init) noexcept {
+    void
+    transfer(const std::bitset<T_Size> &init) noexcept {
       Byte_t word(0);
       size_t entryIdx(0);
       size_t i(0);
@@ -105,9 +111,9 @@ private:
      * returns true if the specified bit has to be altered
      * returns false if no change was required
      */
-    bool set(size_t bitIdx, bool b) noexcept {
-      size_t byteIdx = byte_index(bitIdx);
-      Entry_t &e = word_for(byteIdx);
+    bool
+    set(size_t bitIdx, bool b) noexcept {
+      Entry_t &e = word_for(byte_index(bitIdx));
 
       const Byte_t offset = word_index(bitIdx);
       const Byte_t mask = one_ >> offset;
@@ -116,11 +122,13 @@ private:
       Byte_t word;
       do {
         if (b) {
-          // bitwise or
+          // printf("word(%d) = word_before(%d) ^ mask(%d)\n",
+          //        (word_before | mask), word_before, mask);
           word = word_before | mask;
         } else {
-          // bitwise xor
-          word = word_before ^ mask;
+          // printf("word(%d) = word_before(%d) & ~mask(%d)\n",
+          //        (word_before & (~mask)), word_before, mask);
+          word = word_before & (~mask);
         }
         // since we don't need to update if they are the same
         if (word == word_before) {
@@ -136,11 +144,13 @@ private:
       return true;
     }
 
-    constexpr Byte_t word_index(size_t bitIdx) const noexcept {
+    constexpr Byte_t
+    word_index(size_t bitIdx) const noexcept {
       return bitIdx - ttttt(ttttt(bitIdx / bits) * bits);
     }
 
-    bool test(size_t bitIdx) const noexcept {
+    bool
+    test(size_t bitIdx) const noexcept {
       size_t byteIdx = byte_index(bitIdx);
       const Entry_t &e = word_for(byteIdx);
 
@@ -151,7 +161,8 @@ private:
       return Byte_t(word & mask) != Byte_t(0);
     }
 
-    Byte_t mask_right(Byte_t idx) const noexcept {
+    Byte_t
+    mask_right(Byte_t idx) const noexcept {
       const Byte_t b = ~Byte_t(0);
       const Byte_t res = b >> idx;
       return res;
@@ -163,7 +174,8 @@ private:
      * 10000000_00000000|32768
      * 00000000_00000001|1
      */
-    bool all(size_t bitIdx, Byte_t test) const noexcept {
+    bool
+    all(size_t bitIdx, Byte_t test) const noexcept {
       size_t idx = byte_index(bitIdx);
       Byte_t wordIdx = word_index(bitIdx);
 
@@ -184,11 +196,13 @@ private:
       return true;
     }
 
-    size_t bit_index(size_t byteIdx, Byte_t wordIdx) const noexcept {
+    size_t
+    bit_index(size_t byteIdx, Byte_t wordIdx) const noexcept {
       return size_t(byteIdx * bits) + wordIdx;
     }
 
-    size_t find_first(size_t bitIdx, bool find) const noexcept {
+    size_t
+    find_first(size_t bitIdx, bool find) const noexcept {
       // TODO
       size_t byteIdx = byte_index(bitIdx);
       auto wordIdx = word_index(bitIdx);
@@ -215,7 +229,8 @@ private:
       return npos;
     }
 
-    size_t swap_first(size_t bitIdx, bool set, size_t limitIdx) noexcept {
+    size_t
+    swap_first(size_t bitIdx, bool set, size_t limitIdx) noexcept {
       size_t wordIdx = byte_index(bitIdx);
       Byte_t wordBitStart = word_index(bitIdx);
       /**
@@ -268,9 +283,9 @@ public:
   }
 
   /**
-  *  @brief init the bitset with
-  *  @param  b  the value to fill with
-  */
+   *  @brief init the bitset with
+   *  @param  b  the value to fill with
+   */
   explicit Bitset(bool v) noexcept //
       : m_entry(v) {
   }
@@ -278,30 +293,35 @@ public:
   Bitset(const Bitset &) = delete;
   Bitset(Bitset &&) = delete;
 
-  Bitset &operator=(const Bitset &) = delete;
-  Bitset &operator=(Bitset &&) = delete;
+  Bitset &
+  operator=(const Bitset &) = delete;
+  Bitset &
+  operator=(Bitset &&) = delete;
 
   ~Bitset() noexcept {
   }
 
-  constexpr size_t size() const noexcept {
+  constexpr size_t
+  size() const noexcept {
     return T_Size;
   }
 
   /**
-  *  @brief sets the specified bit to b
-  *  @param  bitIdx  The index of a bit.
-  *  @return wether b is set to b allready true, otherwise false
-  *  @throw  std::out_of_range  If @a pos is bigger the size of the %set.
-  */
-  bool set(size_t bitIdx, bool b) noexcept {
+   *  @brief sets the specified bit to b
+   *  @param  bitIdx  The index of a bit.
+   *  @return wether b is set to b allready true, otherwise false
+   *  @throw  std::out_of_range  If @a pos is bigger the size of the %set.
+   */
+  bool
+  set(size_t bitIdx, bool b) noexcept {
     if (bitIdx >= T_Size) {
       // TODO
     }
     return m_entry.set(bitIdx, b);
   }
 
-  bool test(size_t bitIdx) const noexcept {
+  bool
+  test(size_t bitIdx) const noexcept {
     if (bitIdx >= T_Size) {
       return false;
     }
@@ -317,48 +337,57 @@ public:
    * for all starting with $bitIndex will be tested
    * against $test if all satisfies return true or else false
    */
-  bool all(size_t bitIdx, bool test) const noexcept {
+  bool
+  all(size_t bitIdx, bool test) const noexcept {
     if (bitIdx >= T_Size) {
       return false;
     }
     return m_entry.all(bitIdx, test ? ~Byte_t(0) : Byte_t(0));
   }
 
-  bool all(bool test) const noexcept {
+  bool
+  all(bool test) const noexcept {
     return all(size_t(0), test);
   }
 
-  size_t find_first(size_t bitIdx, bool find) const noexcept {
+  size_t
+  find_first(size_t bitIdx, bool find) const noexcept {
     if (bitIdx >= T_Size) {
       return false;
     }
     return m_entry.find_first(bitIdx, find);
   }
 
-  size_t find_first(bool find) const noexcept {
+  size_t
+  find_first(bool find) const noexcept {
     return find_first(size_t(0), find);
   }
 
-  size_t swap_first(size_t idx, bool set, size_t limit) noexcept {
+  size_t
+  swap_first(size_t idx, bool set, size_t limit) noexcept {
     if (idx >= T_Size) {
       return npos;
     }
     return m_entry.swap_first(idx, set, limit);
   }
 
-  size_t swap_first(size_t idx, bool set) noexcept {
+  size_t
+  swap_first(size_t idx, bool set) noexcept {
     return swap_first(idx, set, T_Size);
   }
 
-  size_t swap_first(bool set) noexcept {
+  size_t
+  swap_first(bool set) noexcept {
     return swap_first(size_t(0), set);
   }
 
-  size_t swap_first(bool set, size_t limit) noexcept {
+  size_t
+  swap_first(bool set, size_t limit) noexcept {
     return swap_first(size_t(0), set, limit);
   }
 
-  std::string to_string() {
+  std::string
+  to_string() {
     // this print in an reverse order to << operator
     std::string res;
     res.reserve(size());
@@ -376,7 +405,8 @@ public:
 };
 
 template <size_t size, typename Type>
-std::ostream &operator<<(std::ostream &os, const Bitset<size, Type> &b) {
+std::ostream &
+operator<<(std::ostream &os, const Bitset<size, Type> &b) {
   for (size_t i = b.size(); i-- > 0;) {
     if (b[i]) {
       os << '1';
